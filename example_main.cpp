@@ -7,7 +7,7 @@ public:
 	}
 
 	int numAxis() const {
-		return 2;
+		return 3;
 	}
 
 	int length(int axis) {
@@ -15,7 +15,8 @@ public:
 	}
 
 	float value(int axis, int index) const {
-		return (index - 50) / 50.f;
+		int r = rand() % 100;
+		return (r - 50) / 50.f;
 	}
 
 private:
@@ -28,7 +29,7 @@ int main() {
 	MyAdapter adapter;
 	LineGraphDrawer drawer;
 	drawer.setAdapter(&adapter);
-	drawer.setRange(-1, 0);
+	drawer.setRange(-1, 1);
 	const cv::Mat& frame = drawer.draw();
 
 	cv::imshow("frame", frame);
