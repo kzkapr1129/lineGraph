@@ -7,10 +7,10 @@ public:
 	}
 
 	int numAxis() const {
-		return 1;
+		return 2;
 	}
 
-	float length(int axis) {
+	int length(int axis) {
 		return 100;
 	}
 
@@ -28,6 +28,7 @@ int main() {
 	MyAdapter adapter;
 	LineGraphDrawer drawer;
 	drawer.setAdapter(&adapter);
+	drawer.setRange(-1, 0);
 	const cv::Mat& frame = drawer.draw();
 
 	cv::imshow("frame", frame);

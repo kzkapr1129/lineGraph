@@ -12,26 +12,24 @@ const cv::Scalar AXIS_COLORS[] = {
 };
 
 LineGraphDrawer::LineGraphDrawer() 
-		: mRangeX(-1, 1), mRangeY(-1, 1),
+		: mYMin(-1), mYMax(1),
 		mAdapter(NULL), mNumXAxis(100) {
-	init();
+	setRange(-1, 1);
 }
 
 LineGraphDrawer::~LineGraphDrawer() {
 }
 
-void LineGraphDrawer::setRange(float xmin, float xmax, float ymin, float ymax, int numXAxis) {
-	if (xmax <= xmin || ymax <= ymin || numXAxis <= 0) {
+void LineGraphDrawer::setRange(float ymin, float ymax, int numXAxis) {
+	if (ymax <= ymin || ymax < -1 || ymin < -1 || 1 < ymax || 1 < ymin || numXAxis <= 0) {
 		// INVALID param
 		return;
 	}
 
-	mRangeX.first = xmin;
-	mRangeX.second = xmax;
-	mRangeY.first = ymin;
-	mRangeY.second = ymax;
+	mYMin = ymin;
+	mYMax = ymax;
 	mNumXAxis = numXAxis;
-	init();
+	mFrame = cv::Mat::zeros(cv::Size(FRAME_WIDTH, FRAME_WIDTH), CV_8UC3);
 }
 
 void LineGraphDrawer::setAdapter(IAdapter* adapter) {
@@ -44,10 +42,7 @@ const cv::Mat& LineGraphDrawer::draw() {
 	}
 
 	// Y軸の中心線描画
-	cv::line(mFrame, cv::Point(0, mFrame.rows / 2), cv::Point(mFrame.cols, mFrame.rows / 2), cv::Scalar(255, 255, 255), 2);
-
-	// X軸の中心線描画
-	cv::line(mFrame, cv::Point(mFrame.cols / 2, 0), cv::Point(mFrame.cols / 2, mFrame.rows), cv::Scalar(255, 255, 255), 2);
+	cv::line(mFrame, cv::Point(0, mFrame.rows / 2), cv::Point(mFrame.cols, mFrame.rows / 2), cv::Scalar(255, 255, 255), 1);
 
 	// 各軸の線グラフ描画
 	const float deltaX = mFrame.cols / (float)mNumXAxis;
@@ -55,7 +50,7 @@ const cv::Mat& LineGraphDrawer::draw() {
 	for (int axis = 0; axis < numAxis; axis++) {
 
 		float preVal = 0;
-		int length = mAdapter->length(axis);
+		int length = std::min(mNumXAxis, mAdapter->length(axis));
 		for (int i = 0; i < length; i++) {
 			float val = mAdapter->value(axis, i);
 
@@ -76,19 +71,9 @@ const cv::Mat& LineGraphDrawer::draw() {
 	return mFrame;
 }
 
-void LineGraphDrawer::init() {
-	const float width = mRangeX.second - mRangeX.first;
-	const float height = mRangeY.second - mRangeY.first;
-	const float aspect = width / height;
-	const float frameWidth = FRAME_WIDTH;
-	const float frameHeight = FRAME_WIDTH / aspect;
-	mFrame = cv::Mat::zeros(cv::Size(frameWidth, frameHeight), CV_8UC3);
-}
-
 int LineGraphDrawer::calcYpos(float value) const {
-	const float height = fabs(mRangeY.second - mRangeY.first);
-	float cropVal = std::max(mRangeY.first, std::min(mRangeY.second, value));
-	float kval = cropVal + (height / 2);
-	float val2 = kval / height;
-	return mFrame.rows * val2;
+	const float height = fabs(mYMax - mYMin);
+	float cropVal = std::max(mYMin, std::min(mYMax, value));
+	float hWeight = (cropVal - mYMin) / height;
+	return mFrame.rows - mFrame.rows * hWeight;
 }
