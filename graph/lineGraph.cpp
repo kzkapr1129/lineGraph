@@ -21,7 +21,7 @@ LineGraphDrawer::~LineGraphDrawer() {
 }
 
 void LineGraphDrawer::setRange(float ymin, float ymax, int numXAxis) {
-	if (ymax <= ymin || ymax < -1 || ymin < -1 || 1 < ymax || 1 < ymin || numXAxis <= 0) {
+	if (ymax <= ymin || numXAxis <= 0) {
 		// INVALID param
 		return;
 	}
